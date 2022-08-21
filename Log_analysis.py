@@ -74,7 +74,6 @@ def creating_a_shared_csv(name_folder):
                 i += 1
 
 
-
 def create_user_csv(ID_user, name_folder, folder_path_log):
     #name_user = ID_user.split('@')[0]
     #print('Name_user:::', name_user) # 1
