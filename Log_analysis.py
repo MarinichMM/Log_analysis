@@ -72,7 +72,6 @@ def creating_a_shared_csv(name_folder):
                         writer.writerow(frame)
 
                 i += 1
-        file.close()
 
 
 
@@ -129,8 +128,7 @@ def create_user_csv(ID_user, name_folder, folder_path_log):
                         writer = csv.writer(file, delimiter=';') # ,lineterminator="\r"
                         writer.writerow(lst)
 
-                f.close()
-            file.close()
+
 
 
 
@@ -203,7 +201,7 @@ class Window(QMainWindow):
                     if os.path.isdir(name_folder):
                         creating_a_shared_csv(name_folder)
                     i += 1
-                    f.close()
+
 
 
             self.text_edit.append('\n')
