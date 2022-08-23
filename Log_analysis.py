@@ -83,20 +83,18 @@ def create_user_csv(ID_user, name_folder, folder_path_log):
     #print('Folder_path_log:', folder_path_log) # C:/TrueConf/svc_logs/vs_stat_svc_000000a06aab935d@ua7dv.trueconf.name#vcs.txt
 
     if '/' in ID_user:
-        name_user = ID_user.split('/')[0]
+        name_user = ID_user.replace(':', '')
+        name_user = name_user.split('/')[0]
         name_user = name_user.split('@')[0]
 
     elif '!' in ID_user:
-        name_user = ID_user.split('!')[1]
-
-    elif ':' in ID_user:
         name_user = ID_user.replace(':', '')
-        name_user = name_user.split('@')[0]
-
+        name_user = name_user.split('!')[1]
 
 
     else:
-        name_user = ID_user.split('@')[0]
+        name_user = ID_user.replace(':', '')
+        name_user = name_user.split('@')[0]
 
 
     if os.path.exists(f'{name_folder}/{name_user}.csv') != True:
