@@ -17,7 +17,7 @@ def read_toml(file_path):
 config = read_toml('Config_file.ini')
 
 
-name_a_shared_csv = config['Name_a_shared_csv'] # имя общего csv файла для одного лог файла
+name_a_shared_csv = config['Name_a_shared_csv'] # название общего csv файла
 CPU_load = config['CPU_load']
 User_byte = config['User_bytes']
 
@@ -88,6 +88,12 @@ def create_user_csv(ID_user, name_folder, folder_path_log):
 
     elif '!' in ID_user:
         name_user = ID_user.split('!')[1]
+
+    elif ':' in ID_user:
+        name_user = ID_user.replace(':', '')
+        name_user = name_user.split('@')[0]
+
+
 
     else:
         name_user = ID_user.split('@')[0]
