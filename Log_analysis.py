@@ -17,7 +17,7 @@ def read_toml(file_path):
 config = read_toml('Config_file.ini')
 
 
-name_a_shared_csv = config['Name_a_shared_csv'] # имя общего csv файла для одного лог файла
+name_a_shared_csv = config['Name_a_shared_csv'] #  имя общего csv файла для одного лог файла
 CPU_load = config['CPU_load']
 User_byte = config['User_bytes']
 
