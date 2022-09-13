@@ -152,7 +152,6 @@ def parse(row_data,name_folder, folder_path_log):
 
 
 
-
 class Window(QMainWindow):
     def __init__(self):
         super(Window, self).__init__()
