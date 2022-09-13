@@ -1,6 +1,7 @@
 # -*- coding: UTF-8 -*-
 from PyQt5 import QtWidgets, QtCore
-from PyQt5.QtWidgets import QApplication, QMainWindow, QMenuBar, QMenu, QFileDialog
+from PyQt5.QtWidgets import QApplication, QMainWindow, QMenuBar, QMenu, QFileDialog, QCheckBox
+from PyQt5.QtCore import Qt
 import threading
 import toml
 import os
@@ -11,18 +12,23 @@ import re
 import sys
 import time
 
+import pyexcel
+import pyexcel_xlsx
+
+
 def read_toml(file_path):
     with open(file_path, "r") as f:
         return toml.load(f)
 config = read_toml('Config_file.ini')
 
 
-name_a_shared_csv = config['Name_a_shared_csv'] #  имя общего csv файла для одного лог файла
+name_a_shared_csv = config['Name_a_shared_csv'] # название общего csv файла
 CPU_load = config['CPU_load']
 User_byte = config['User_bytes']
 
+
 def creating_a_shared_csv(name_folder):
-    if os.path.exists(f'{name_a_shared_csv}.csv') != True:
+    if os.path.exists(f'{name_folder}\{name_a_shared_csv}.csv') != True:
         files = os.listdir(path=f"{name_folder}")
         with open(f'{name_folder}\{name_a_shared_csv}.csv', 'w', newline='') as file:
             header = [(
@@ -36,7 +42,8 @@ def creating_a_shared_csv(name_folder):
             writer.writerows(header)
             i = 0
             while i < len(files):
-                if files[i] != f'{name_a_shared_csv}.csv':
+                if files[i] != f'{name_a_shared_csv}.csv' and files[i] != 'load_users.csv':
+
                     anime = pd.read_csv(f'{name_folder}\{files[i]}', encoding='windows-1251', sep=';', skiprows=[0], header=None)
 
 
@@ -72,8 +79,6 @@ def creating_a_shared_csv(name_folder):
                         writer.writerow(frame)
 
                 i += 1
-        file.close()
-
 
 
 def create_user_csv(ID_user, name_folder, folder_path_log):
@@ -85,14 +90,13 @@ def create_user_csv(ID_user, name_folder, folder_path_log):
     #print('Folder_path_log:', folder_path_log) # C:/TrueConf/svc_logs/vs_stat_svc_000000a06aab935d@ua7dv.trueconf.name#vcs.txt
 
     if '/' in ID_user:
-        name_user = ID_user.split('/')[0]
-        name_user = name_user.split('@')[0]
+        name_user = ID_user.replace(':', '').split('/')[0].split('@')[0]
 
     elif '!' in ID_user:
-        name_user = ID_user.split('!')[1]
+        name_user = ID_user.replace(':', '').split('!')[1]
 
     else:
-        name_user = ID_user.split('@')[0]
+        name_user = ID_user.replace(':', '').split('@')[0]
 
 
     if os.path.exists(f'{name_folder}/{name_user}.csv') != True:
@@ -129,8 +133,33 @@ def create_user_csv(ID_user, name_folder, folder_path_log):
                         writer = csv.writer(file, delimiter=';') # ,lineterminator="\r"
                         writer.writerow(lst)
 
-                f.close()
-            file.close()
+    #sheet = pyexcel.get_sheet(file_name=f'{name_folder}\{name_user}.csv', delimiter=";", encoding='windows-1251')
+    #sheet.save_as(f"{name_user}.xlsx")
+
+def load_users_csv(ID_user, name_folder, date, time, load): # дофига жрёт времени!!! как вариант попробовать через While
+    if os.path.exists(f'{name_folder}\load_users.csv') != True:
+        with open(f'{name_folder}\load_users.csv', 'w', newline='') as file:
+            header = [(
+                'Дата',
+                'Время',
+                'ID пользователя',
+                'Загрузка ЦП',
+                'Суть проблемы'
+            )]
+            writer = csv.writer(file, delimiter=';')
+            writer.writerows(header)
+
+    anime = pd.read_csv(f'{name_folder}\load_users.csv', encoding='windows-1251', sep=';', header=None)
+
+    if ID_user not in str(anime[2]):
+        message = f'Загрузка ЦП {load}%'
+        lst = [date, time, ID_user, load, message]
+        with open(f'{name_folder}\load_users.csv', 'a+', newline='') as file:
+            writer = csv.writer(file, delimiter=';')
+            writer.writerow(lst)
+
+
+
 
 
 
@@ -141,13 +170,21 @@ def parse(row_data,name_folder, folder_path_log):
     line = re.findall(pattern, row_data)
     if line != []:
         #print(line) # [('01/08/2022', '17:03:13', '1@ua7dv.trueconf.name/456764466', '70', '65535', '500', '40')]
-        ID_user, load, pkt, users_bytes = line[0][2], line[0][3], line[0][5], line[0][6]
+        date, time, ID_user, load, pkt, users_bytes = line[0][0], line[0][1], line[0][2], line[0][3], line[0][5], line[0][6]
         users_bytes = int(users_bytes)
+        load = int(load)
 
         if users_bytes > User_byte:
             if not os.path.isdir(name_folder):
                 os.mkdir(name_folder)
             create_user_csv(ID_user, name_folder, folder_path_log)
+
+        if load > CPU_load:
+            if not os.path.isdir(name_folder):
+                os.mkdir(name_folder)
+            load_users_csv(ID_user, name_folder, date, time, load)
+
+
 
 
 
@@ -157,7 +194,7 @@ class Window(QMainWindow):
         super(Window, self).__init__()
 
         self.setWindowTitle('Парсер svc_logs')
-        self.setGeometry(300, 200, 600, 300)
+        self.setGeometry(300, 200, 700, 400)
 
         self.createMenuBar()
 
@@ -167,7 +204,7 @@ class Window(QMainWindow):
         self.setCentralWidget(self.text_edit)
 
         self.button = QtWidgets.QPushButton(self)
-        self.button.move(200, 250)
+        self.button.move(250, 350)
         self.button.setText('Анализ')
         self.button.setFixedWidth(200) # укзываем ширину кнопки
         self.button.setFixedHeight(40) # указываем высоту кнопки
@@ -202,7 +239,7 @@ class Window(QMainWindow):
                     if os.path.isdir(name_folder):
                         creating_a_shared_csv(name_folder)
                     i += 1
-                    f.close()
+
 
 
             self.text_edit.append('\n')
@@ -259,5 +296,3 @@ if __name__ == "__main__":
     window = Window()
     window.show()
     sys.exit(app.exec_())
-
-# САБИЛЬНАЯ ВЕРСИЯ!
