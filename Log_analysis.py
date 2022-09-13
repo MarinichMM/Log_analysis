@@ -150,20 +150,14 @@ def load_users_csv(ID_user, name_folder, date, time, load): # дофига жр�
             writer.writerows(header)
 
     anime = pd.read_csv(f'{name_folder}\load_users.csv', encoding='windows-1251', sep=';', header=None)
-    column_length = int(len(anime[2])) - 1
-    print(column_length)
 
-    for i, id_user in enumerate(anime[2]):
-        if id_user == ID_user:
-            break
-        elif i == column_length:
-            message = f'Загрузка ЦП {load}%'
-            lst = [date, time, ID_user, load, message]
+    if ID_user not in str(anime[2]):
+        message = f'Загрузка ЦП {load}%'
+        lst = [date, time, ID_user, load, message]
+        with open(f'{name_folder}\load_users.csv', 'a+', newline='') as file:
+            writer = csv.writer(file, delimiter=';')
+            writer.writerow(lst)
 
-            with open(f'{name_folder}\load_users.csv', 'a+', newline='') as file:
-                writer = csv.writer(file, delimiter=';')
-                writer.writerow(lst)
-                break
 
 
 
@@ -302,5 +296,3 @@ if __name__ == "__main__":
     window = Window()
     window.show()
     sys.exit(app.exec_())
-
-# СТАБИЛЬНАЯ ВЕРСИЯ!
